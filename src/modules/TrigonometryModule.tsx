@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
 import TabBar from '../components/ui/TabBar';
 import GlassPanel from '../components/ui/GlassPanel';
 import SliderRow from '../components/ui/SliderRow';
@@ -163,7 +162,11 @@ export default function TrigonometryModule() {
         const x = px / xScale;
         const y = fn(x);
         const canY = cy - y * scale;
-        px === 0 ? ctx.moveTo(px, canY) : ctx.lineTo(px, canY);
+        if (px === 0) {
+          ctx.moveTo(px, canY);
+        } else {
+          ctx.lineTo(px, canY);
+        }
       }
       ctx.stroke();
       ctx.restore();
@@ -288,30 +291,151 @@ export default function TrigonometryModule() {
   );
 }
 
+import TheorySection from '../components/ui/TheorySection';
+
 function TrigTheory() {
+  const lessons = [
+    {
+      id: 'trig-intro',
+      title: 'Introduction to Trigonometry',
+      type: 'video' as const,
+      duration: '12:15',
+      difficulty: 'beginner' as const,
+      content: {
+        videoUrl: 'https://www.youtube.com/watch?v=1m9p9iubMLU',
+        description: 'Khan Academy introduction to the unit circle and basic trigonometry. Learn how angles relate to coordinates on the circle.',
+        keyPoints: [
+          'Right triangle definitions',
+          'Unit circle visualization',
+          'Sine, cosine, and tangent',
+          'Angle measurement in radians and degrees',
+          'Real-world applications'
+        ]
+      }
+    },
+    {
+      id: 'unit-circle',
+      title: 'Unit Circle and Trig Functions',
+      type: 'video' as const,
+      duration: '15:30',
+      difficulty: 'intermediate' as const,
+      content: {
+        videoUrl: 'https://www.youtube.com/watch?v=EnwWxMZVBeg',
+        description: 'Khan Academy introduction to radians and the unit circle. Master the fundamental visualization tool for trigonometry.',
+        keyPoints: [
+          'Unit circle coordinates',
+          'Radians vs degrees conversion',
+          'Reference angles',
+          'Periodicity and symmetry',
+          'Graphs of trigonometric functions'
+        ]
+      }
+    },
+    {
+      id: 'trig-identities',
+      title: 'Trigonometric Identities',
+      type: 'video' as const,
+      duration: '18:20',
+      difficulty: 'intermediate' as const,
+      content: {
+        videoUrl: 'https://www.youtube.com/watch?v=KoYZErFpZ5Q',
+        description: 'Khan Academy video on solving triangles using the unit circle and applying trigonometric identities.',
+        keyPoints: [
+          'Pythagorean identities',
+          'Sum and difference formulas',
+          'Double angle formulas',
+          'Product-to-sum identities',
+          'Applications in problem solving'
+        ]
+      }
+    },
+    {
+      id: 'advanced-trig',
+      title: 'Advanced Trigonometry Applications',
+      type: 'text' as const,
+      duration: '25 min read',
+      difficulty: 'advanced' as const,
+      content: {
+        html: `
+          <h3>Advanced Trigonometry Applications</h3>
+          <p>Explore sophisticated applications of trigonometry in physics, engineering, and mathematics.</p>
+          
+          <h4>Inverse Trigonometric Functions</h4>
+          <p>The inverse functions return angles from trigonometric ratios:</p>
+          <blockquote>sin⁻¹(x) returns the angle whose sine is x</blockquote>
+          <blockquote>Domain restrictions apply to ensure functions are one-to-one</blockquote>
+          
+          <h4>Law of Sines and Cosines</h4>
+          <p>For any triangle with sides a, b, c and opposite angles A, B, C:</p>
+          <blockquote>Law of Sines: a/sin(A) = b/sin(B) = c/sin(C)</blockquote>
+          <blockquote>Law of Cosines: c² = a² + b² - 2ab·cos(C)</blockquote>
+          
+          <h4>Complex Numbers and Trigonometry</h4>
+          <p>Euler's formula connects complex numbers with trigonometry:</p>
+          <blockquote>e^(iθ) = cos(θ) + i·sin(θ)</blockquote>
+          <p>This leads to De Moivre's Theorem for powers:</p>
+          <blockquote>(cos(θ) + i·sin(θ))ⁿ = cos(nθ) + i·sin(nθ)</blockquote>
+          
+          <h4>Fourier Series</h4>
+          <p>Any periodic function can be expressed as a sum of sines and cosines:</p>
+          <blockquote>f(x) = a₀/2 + Σ[aₙcos(nx) + bₙsin(nx)]</blockquote>
+          <p>This is fundamental to signal processing and wave analysis.</p>
+          
+          <h4>Applications in Physics</h4>
+          <ul>
+            <li><strong>Wave Motion:</strong> y = A·sin(kx - ωt + φ)</li>
+            <li><strong>Simple Harmonic Motion:</strong> x = A·cos(ωt + φ)</li>
+            <li><strong>Electromagnetic Waves:</strong> E = E₀·sin(kx - ωt)</li>
+            <li><strong>Quantum Mechanics:</strong> Wave functions use complex exponentials</li>
+          </ul>
+        `,
+        formulas: [
+          {
+            expression: 'a/sin(A) = b/sin(B) = c/sin(C)',
+            description: 'Law of Sines'
+          },
+          {
+            expression: 'c² = a² + b² - 2ab·cos(C)',
+            description: 'Law of Cosines'
+          },
+          {
+            expression: 'y = A·sin(kx - ωt + φ)',
+            description: 'Wave Equation'
+          },
+          {
+            expression: 'f(x) = a₀/2 + Σ[aₙcos(nx) + bₙsin(nx)]',
+            description: 'Fourier Series'
+          }
+        ]
+      }
+    },
+    {
+      id: 'applications-trig',
+      title: 'Real-World Applications',
+      type: 'video' as const,
+      duration: '14:30',
+      difficulty: 'intermediate' as const,
+      content: {
+        videoUrl: 'https://www.youtube.com/watch?v=Jni7E2RH43s',
+        description: 'Khan Academy unit circle manipulative and real-world applications. See how trigonometry is used in practical problems.',
+        keyPoints: [
+          'Physics: waves, oscillations, and harmonic motion',
+          'Engineering: signal processing and control systems',
+          'Navigation: GPS and astronomy',
+          'Architecture: structural design',
+          'Computer graphics: rotations and animations'
+        ]
+      }
+    }
+  ];
+
   return (
-    <motion.div className="flex-1 overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[
-          { name: 'sin(θ)', def: 'Opposite / Hypotenuse', key: 'Vertical component on unit circle', color: '#10B981' },
-          { name: 'cos(θ)', def: 'Adjacent / Hypotenuse', key: 'Horizontal component on unit circle', color: '#F59E0B' },
-          { name: 'tan(θ)', def: 'sin(θ) / cos(θ)', key: 'Slope of the radius line', color: '#3B82F6' },
-        ].map(t => (
-          <div key={t.name} className="glass rounded-xl p-6">
-            <div className="text-2xl font-bold mb-2" style={{ color: t.color }}>{t.name}</div>
-            <div className="text-sm text-white mb-1">{t.def}</div>
-            <div className="text-xs text-[var(--text-muted)]">{t.key}</div>
-          </div>
-        ))}
-        <div className="glass rounded-xl p-6 md:col-span-3">
-          <h3 className="font-bold text-white mb-4">Key Identities</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {['sin²x + cos²x = 1', 'sin(2x) = 2sin(x)cos(x)', 'cos(2x) = cos²x - sin²x', 'e^(ix) = cos(x) + i·sin(x)'].map(id => (
-              <div key={id} className="glass rounded-lg p-3 font-mono text-xs text-[#06B6D4]">{id}</div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </motion.div>
+    <TheorySection
+      moduleId="trigonometry"
+      title="Trigonometry & Periodic Functions"
+      description="Master the elegant mathematics of triangles and periodic phenomena. From basic right triangle trigonometry to advanced Fourier analysis, learn how these functions model cyclical patterns throughout nature and technology."
+      lessons={lessons}
+      color="#8B5CF6"
+    />
   );
 }

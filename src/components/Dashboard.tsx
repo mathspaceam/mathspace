@@ -136,28 +136,6 @@ export default function Dashboard({ onNavigate }: Props) {
             </p>
           </motion.button>
 
-          {/* Quick stats */}
-          <motion.div
-            className="glass rounded-xl p-5"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            <div className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-widest mb-4">Modules</div>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { label: 'Modules', value: '8', color: '#3B82F6' },
-                { label: 'Presets', value: '6+', color: '#10B981' },
-                { label: 'Interactive', value: '∞', color: '#F59E0B' },
-                { label: 'Real-time', value: '60fps', color: '#06B6D4' },
-              ].map(s => (
-                <div key={s.label} className="text-center">
-                  <div className="text-2xl font-bold" style={{ color: s.color }}>{s.value}</div>
-                  <div className="text-xs text-[var(--text-muted)]">{s.label}</div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
         </div>
       </div>
     </div>

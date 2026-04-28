@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
 import TabBar from '../components/ui/TabBar';
 import GlassPanel from '../components/ui/GlassPanel';
 import SliderRow from '../components/ui/SliderRow';
@@ -12,12 +11,15 @@ export default function ComplexModule() {
   const [tab, setTab] = useState('practical');
   const [a, setA] = useState(2);
   const [b, setB] = useState(1.5);
-  const [showEuler, setShowEuler] = useState(false);
   const [showPower, setShowPower] = useState(false);
   const [power, setPower] = useState(2);
   const dragging = useRef(false);
+  const [panOffsetX, setPanOffsetX] = useState(0);
+  const [panOffsetY, setPanOffsetY] = useState(0);
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
-  const xMin = -5, xMax = 5, yMin = -5, yMax = 5;
+  const xMin = -5 + panOffsetX, xMax = 5 + panOffsetX, yMin = -5 + panOffsetY, yMax = 5 + panOffsetY;
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -55,7 +57,7 @@ export default function ComplexModule() {
     const arg = Math.atan2(b, a);
 
     // Unit circle
-    const { cx: ux, cy: uy } = worldToCanvas(1, 0, xMin, xMax, yMin, yMax, w, h);
+    const { cx: ux } = worldToCanvas(1, 0, xMin, xMax, yMin, yMax, w, h);
     const radius = ux - x0;
     ctx.save();
     ctx.strokeStyle = 'rgba(255,255,255,0.1)';
@@ -148,7 +150,7 @@ export default function ComplexModule() {
     ctx.fillStyle = '#3B82F6'; ctx.font = '11px JetBrains Mono, monospace';
     ctx.fillText(`e^(i·${(arg).toFixed(3)}) · ${mag.toFixed(3)}`, 22, 86);
     ctx.restore();
-  }, [a, b, showPower, power]);
+  }, [a, b, showPower, power, xMin, yMin, xMax, yMax]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -169,15 +171,29 @@ export default function ComplexModule() {
     if (!canvas) return;
     const onDown = (e: MouseEvent) => {
       const p = canvasToWorld(e.offsetX * devicePixelRatio, e.offsetY * devicePixelRatio, xMin, xMax, yMin, yMax, canvas.width, canvas.height);
-      if (Math.hypot(p.wx - a, p.wy - b) < 0.5) dragging.current = true;
+      if (Math.hypot(p.wx - a, p.wy - b) < 0.5) {
+        dragging.current = true;
+      } else {
+        setIsPanning(true);
+        setPanStart({ x: e.offsetX * devicePixelRatio, y: e.offsetY * devicePixelRatio });
+      }
     };
     const onMove = (e: MouseEvent) => {
-      if (!dragging.current) return;
-      const p = canvasToWorld(e.offsetX * devicePixelRatio, e.offsetY * devicePixelRatio, xMin, xMax, yMin, yMax, canvas.width, canvas.height);
-      setA(Math.max(xMin, Math.min(xMax, p.wx)));
-      setB(Math.max(yMin, Math.min(yMax, p.wy)));
+      if (dragging.current) {
+        const p = canvasToWorld(e.offsetX * devicePixelRatio, e.offsetY * devicePixelRatio, xMin, xMax, yMin, yMax, canvas.width, canvas.height);
+        setA(Math.max(xMin, Math.min(xMax, p.wx)));
+        setB(Math.max(yMin, Math.min(yMax, p.wy)));
+      } else if (isPanning) {
+        const dx = e.offsetX * devicePixelRatio - panStart.x;
+        const dy = e.offsetY * devicePixelRatio - panStart.y;
+        setPanOffsetX(prev => prev - dx * 0.0008);
+        setPanOffsetY(prev => prev + dy * 0.0008);
+      }
     };
-    const onUp = () => { dragging.current = false; };
+    const onUp = () => { 
+      dragging.current = false; 
+      setIsPanning(false);
+    };
     canvas.addEventListener('mousedown', onDown);
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
@@ -186,7 +202,7 @@ export default function ComplexModule() {
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
     };
-  }, [a, b]);
+  }, [a, b, xMin, yMin, xMax, yMax, isPanning, panStart]);
 
   return (
     <div className="flex flex-col h-full">
@@ -252,21 +268,157 @@ function drawArrow(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: nu
   ctx.restore();
 }
 
+import TheorySection from '../components/ui/TheorySection';
+
 function ComplexTheory() {
+  const lessons = [
+    {
+      id: 'complex-intro',
+      title: 'Introduction to Complex Numbers',
+      type: 'video' as const,
+      duration: '10:45',
+      difficulty: 'beginner' as const,
+      content: {
+        videoUrl: 'https://www.youtube.com/watch?v=ysVcAYo7UPI',
+        description: 'Khan Academy introduction to imaginary numbers and complex numbers. Learn how i² = -1 extends the number system.',
+        keyPoints: [
+          'Real and imaginary parts',
+          'The imaginary unit i where i² = -1',
+          'Complex plane visualization',
+          'Basic arithmetic operations',
+          'Historical development'
+        ]
+      }
+    },
+    {
+      id: 'polar-form',
+      title: 'Polar Form and Complex Operations',
+      type: 'video' as const,
+      duration: '14:30',
+      difficulty: 'intermediate' as const,
+      content: {
+        videoUrl: 'https://www.youtube.com/watch?v=hqr1DtXXHpY',
+        description: 'Don\'t Memorise comprehensive introduction to complex numbers including operations and geometric interpretations.',
+        keyPoints: [
+          'Magnitude and argument',
+          'Polar coordinates in complex plane',
+          'Complex arithmetic operations',
+          'Geometric interpretation of multiplication',
+          'Applications in mathematics'
+        ]
+      }
+    },
+    {
+      id: 'complex-operations',
+      title: 'Complex Number Operations',
+      type: 'text' as const,
+      duration: '20 min read',
+      difficulty: 'intermediate' as const,
+      content: {
+        html: `
+          <h3>Master Complex Number Operations</h3>
+          <p>Complex numbers follow specific rules for arithmetic operations that extend real number operations while introducing new geometric interpretations.</p>
+          
+          <h4>Complex Number Forms</h4>
+          <p>Complex numbers can be represented in multiple equivalent forms:</p>
+          <blockquote>Rectangular: z = a + bi</blockquote>
+          <blockquote>Polar: z = r(cos θ + i sin θ)</blockquote>
+          <blockquote>Exponential: z = re^(iθ)</blockquote>
+          <p>Where r = |z| = √(a² + b²) is the magnitude and θ = arg(z) = atan2(b, a) is the argument.</p>
+          
+          <h4>Arithmetic Operations</h4>
+          <p><strong>Addition/Subtraction:</strong> Combine real and imaginary parts separately</p>
+          <blockquote>(a + bi) + (c + di) = (a + c) + (b + d)i</blockquote>
+          
+          <p><strong>Multiplication:</strong> Use distributive property and i² = -1</p>
+          <blockquote>(a + bi)(c + di) = (ac - bd) + (ad + bc)i</blockquote>
+          
+          <p><strong>Division:</strong> Multiply by complex conjugate</p>
+          <blockquote>(a + bi)/(c + di) = [(a + bi)(c - di)]/(c² + d²)</blockquote>
+          
+          <h4>Polar Form Operations</h4>
+          <p>Multiplication and division become simpler in polar form:</p>
+          <blockquote>r₁e^(iθ₁) × r₂e^(iθ₂) = (r₁r₂)e^(i(θ₁+θ₂))</blockquote>
+          <blockquote>r₁e^(iθ₁) / r₂e^(iθ₂) = (r₁/r₂)e^(i(θ₁-θ₂))</blockquote>
+          
+          <h4>Complex Conjugate</h4>
+          <p>The complex conjugate of z = a + bi is z̄ = a - bi</p>
+          <blockquote>z × z̄ = a² + b² = |z|²</blockquote>
+          <p>Conjugates are essential for division and finding real parts.</p>
+          
+          <h4>Applications</h4>
+          <ul>
+            <li><strong>Electrical Engineering:</strong> AC circuit analysis</li>
+            <li><strong>Signal Processing:</strong> Fourier transforms</li>
+            <li><strong>Quantum Mechanics:</strong> Wave functions</li>
+            <li><strong>Control Theory:</strong> System stability</li>
+          </ul>
+        `,
+        formulas: [
+          {
+            expression: 'z = a + bi',
+            description: 'Rectangular Form'
+          },
+          {
+            expression: 'z = r(cos θ + i sin θ)',
+            description: 'Polar Form'
+          },
+          {
+            expression: '(a + bi)(c + di) = (ac - bd) + (ad + bc)i',
+            description: 'Complex Multiplication'
+          },
+          {
+            expression: 'z × z̄ = |z|²',
+            description: 'Complex Conjugate Property'
+          }
+        ]
+      }
+    },
+    {
+      id: 'complex-analysis',
+      title: 'Complex Analysis Applications',
+      type: 'video' as const,
+      duration: '16:45',
+      difficulty: 'advanced' as const,
+      content: {
+        videoUrl: 'https://www.youtube.com/watch?v=BuDq6p7uFE4',
+        description: 'How imaginary numbers relate to quantum mechanics. Advanced applications of complex numbers in modern physics.',
+        keyPoints: [
+          'Complex numbers in quantum mechanics',
+          'Wave functions and probability amplitudes',
+          'Complex analysis in engineering',
+          'Signal processing applications',
+          'Modern physics connections'
+        ]
+      }
+    },
+    {
+      id: 'applications-complex',
+      title: 'Real-World Applications',
+      type: 'video' as const,
+      duration: '12:20',
+      difficulty: 'intermediate' as const,
+      content: {
+        videoUrl: 'https://www.youtube.com/watch?v=ysVcAYo7UPI',
+        description: 'Khan Academy applications of complex numbers in real-world problems and engineering.',
+        keyPoints: [
+          'Electrical engineering: AC circuits and signals',
+          'Signal processing: Fourier analysis',
+          'Physics: wave functions and quantum mechanics',
+          'Engineering: control systems and stability',
+          'Mathematics: solving polynomial equations'
+        ]
+      }
+    }
+  ];
+
   return (
-    <motion.div className="flex-1 overflow-y-auto" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="glass rounded-xl p-6">
-          <h3 className="font-bold text-white mb-4">Complex Numbers</h3>
-          <div className="glass rounded-lg p-3 font-mono text-xs text-[#EC4899] mb-3">z = a + bi, where i² = -1</div>
-          <p className="text-sm text-[var(--text-secondary)]">Complex multiplication rotates and scales: z₁ · z₂ multiplies magnitudes and adds arguments.</p>
-        </div>
-        <div className="glass rounded-xl p-6">
-          <h3 className="font-bold text-white mb-4">Euler's Formula</h3>
-          <div className="glass rounded-lg p-3 font-mono text-xs text-[#3B82F6] mb-3">e^(iθ) = cos(θ) + i·sin(θ)</div>
-          <p className="text-sm text-[var(--text-secondary)]">Every complex number can be written as r·e^(iθ) — a magnitude r at angle θ.</p>
-        </div>
-      </div>
-    </motion.div>
+    <TheorySection
+      moduleId="complex"
+      title="Complex Numbers & Analysis"
+      description="Master the elegant world of complex numbers. From basic arithmetic to advanced complex analysis, learn how these powerful mathematical objects unlock new dimensions in science and engineering."
+      lessons={lessons}
+      color="#EC4899"
+    />
   );
 }
